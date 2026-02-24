@@ -101,6 +101,49 @@ const signals = [
   '🧭 Claude flagged a11y contrast drift',
 ]
 
+const directives = [
+  {
+    title: 'Auto-merge low-risk PRs',
+    detail: 'Requires CI green + 2 AI approvals',
+    state: 'Enabled',
+  },
+  {
+    title: 'Night watch (02:00–06:00)',
+    detail: 'Only incident alerts, no pings',
+    state: 'Enabled',
+  },
+  {
+    title: 'Sentry sweep',
+    detail: 'Spawn agents for new error spikes',
+    state: 'Armed',
+  },
+]
+
+const resources = [
+  { label: 'Compute', value: 68 },
+  { label: 'Context window', value: 74 },
+  { label: 'API budget', value: 57 },
+]
+
+const activity = [
+  {
+    time: '14:42',
+    text: 'Codex pushed 3 commits on feat/ledger-sync',
+  },
+  {
+    time: '14:39',
+    text: 'Gemini delivered UI spec v2.1',
+  },
+  {
+    time: '14:33',
+    text: 'Zoe approved mission: “Agent HR dashboard”',
+  },
+  {
+    time: '14:27',
+    text: 'Claude triggered snapshot audit (UI)',
+  },
+]
+
 function StatBar({ value }: { value: number }) {
   return (
     <div className="stat">
@@ -238,6 +281,75 @@ function App() {
               <h3>CI Velocity</h3>
               <p>1.3x</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid--secondary">
+        <div className="panel">
+          <div className="panel__header">
+            <h2>Command Center</h2>
+            <span>Live directives</span>
+          </div>
+          <div className="directives">
+            {directives.map((item) => (
+              <div className="directive" key={item.title}>
+                <div>
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <button className="chip">{item.state}</button>
+              </div>
+            ))}
+          </div>
+          <div className="command-actions">
+            <button className="primary">Broadcast order</button>
+            <button>Pause all agents</button>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel__header">
+            <h2>Resource Forge</h2>
+            <span>Capacity meter</span>
+          </div>
+          <div className="resources">
+            {resources.map((resource) => (
+              <div key={resource.label}>
+                <div className="resources__label">
+                  <span>{resource.label}</span>
+                  <em>{resource.value}%</em>
+                </div>
+                <div className="resources__track">
+                  <span style={{ width: `${resource.value}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="resource-meta">
+            <div>
+              <h3>Worktrees</h3>
+              <p>6</p>
+            </div>
+            <div>
+              <h3>Active loops</h3>
+              <p>3</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel__header">
+            <h2>Activity Log</h2>
+            <span>Last 20 minutes</span>
+          </div>
+          <div className="activity">
+            {activity.map((entry) => (
+              <div key={entry.time} className="activity__row">
+                <span>{entry.time}</span>
+                <p>{entry.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
