@@ -120,6 +120,10 @@ function App() {
   const [missionEta, setMissionEta] = useState('15m')
   const [missionRisk, setMissionRisk] = useState('Low')
   const [missionAssignees, setMissionAssignees] = useState<string[]>([])
+  const [missionPrompt, setMissionPrompt] = useState('')
+  const [spawnRole, setSpawnRole] = useState('builder')
+  const [repoPath, setRepoPath] = useState('/Users/kevinmarty/opendev/openboard')
+  const [repoName, setRepoName] = useState('')
   const [broadcastMessage, setBroadcastMessage] = useState('')
 
   const bestAgent = useMemo(() => {
@@ -272,6 +276,32 @@ function App() {
 
     setMissionTitle('')
     setMissionAssignees([])
+  }
+
+  const spawnMission = async () => {
+    if (!missionTitle.trim() || !missionPrompt.trim()) return
+    await fetch('/api/actions/spawn-mission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: missionTitle,
+        prompt: missionPrompt,
+        role: spawnRole,
+        repoPath,
+      }),
+    })
+    setMissionTitle('')
+    setMissionPrompt('')
+  }
+
+  const createRepo = async () => {
+    if (!repoName.trim()) return
+    await fetch('/api/actions/create-repo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: repoName }),
+    })
+    setRepoName('')
   }
 
   const login = () => {
@@ -461,6 +491,24 @@ function App() {
                 placeholder="Deploy agent onboarding revamp"
               />
             </label>
+            <label>
+              Mission prompt (for Codex)
+              <textarea
+                value={missionPrompt}
+                onChange={(event) => setMissionPrompt(event.target.value)}
+                placeholder="Describe the task in detail. Include constraints, files, tests, and definition of done."
+              />
+            </label>
+            <div className="mission-form__row">
+              <label>
+                Role
+                <input value={spawnRole} onChange={(event) => setSpawnRole(event.target.value)} />
+              </label>
+              <label>
+                Repo path
+                <input value={repoPath} onChange={(event) => setRepoPath(event.target.value)} />
+              </label>
+            </div>
             <div className="mission-form__row">
               <label>
                 ETA
@@ -476,7 +524,7 @@ function App() {
               </label>
             </div>
             <div className="assignees">
-              <span>Assign agents</span>
+              <span>Assign existing agents</span>
               <div>
                 {agents.map((agent) => (
                   <label key={agent.id}>
@@ -496,7 +544,10 @@ function App() {
                 ))}
               </div>
             </div>
-            <button className="primary" onClick={createMission}>Dispatch mission</button>
+            <div className="mission-actions">
+              <button className="primary" onClick={createMission}>Dispatch mission</button>
+              <button onClick={spawnMission}>Spawn mission agent</button>
+            </div>
           </div>
         </div>
 
@@ -526,6 +577,17 @@ function App() {
           </div>
           <div className="command-actions">
             <button onClick={pauseAll}>Pause all agents</button>
+          </div>
+          <div className="repo-form">
+            <label>
+              New product repo
+              <input
+                value={repoName}
+                onChange={(event) => setRepoName(event.target.value)}
+                placeholder="pixel-invoicing"
+              />
+            </label>
+            <button className="primary" onClick={createRepo}>Create public repo</button>
           </div>
         </div>
 

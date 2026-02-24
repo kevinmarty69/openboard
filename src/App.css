@@ -90,6 +90,12 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+@media (max-width: 1200px) {
+  .grid--secondary {
+    grid-template-columns: 1fr;
+  }
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
@@ -315,7 +321,9 @@
 
 .mission-form input,
 .mission-form select,
-.broadcast input {
+.mission-form textarea,
+.broadcast input,
+.repo-form input {
   background: rgba(10, 14, 18, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
@@ -324,10 +332,21 @@
   font: inherit;
 }
 
+.mission-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
 .mission-form__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.mission-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .assignees {
@@ -360,6 +379,19 @@
 
 .broadcast input {
   flex: 1;
+}
+
+.repo-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.repo-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--soft);
 }
 
 .card__actions .danger {

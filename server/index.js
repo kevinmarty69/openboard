@@ -6,6 +6,7 @@ import http from 'node:http'
 import { WebSocketServer } from 'ws'
 import db from './db.js'
 import { runShell } from './actions.js'
+import { spawnMissionWorktree, createRepo } from './orchestrator.js'
 
 dotenv.config()
 
@@ -386,6 +387,73 @@ app.post('/api/actions/agent/:id', requireAuth, async (req, res) => {
   }
 
   res.json({ ok: true })
+})
+
+app.post('/api/actions/spawn-mission', requireAuth, async (req, res) => {
+  const { title, prompt, role, repoPath } = req.body
+  if (!title || !prompt || !role || !repoPath) {
+    return res.status(400).json({ error: 'Missing title, prompt, role, repoPath' })
+  }
+
+  const { session, branch, worktree } = await spawnMissionWorktree({
+    repoPath,
+    role,
+    prompt,
+  })
+
+  const agent = {
+    id: `A-${nanoid(4)}`,
+    name: role,
+    role,
+    avatar: '🧠',
+    status: 'Active',
+    level: 1,
+    energy: 80,
+    morale: 80,
+    focus: 80,
+    location: 'Worktree Bay',
+    current: title,
+    xp: 10,
+    skills: JSON.stringify([{ name: 'Execution', value: 72 }]),
+    equipment: JSON.stringify(['Worktree Kit']),
+    driver: 'tmux',
+    tmux_session: session,
+    repo: 'openboard',
+  }
+
+  db.prepare(
+    `insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo)
+     values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo)`
+  ).run(agent)
+
+  const mission = {
+    id: `M-${nanoid(4)}`,
+    title,
+    eta: 'TBD',
+    risk: 'Medium',
+    squad: role,
+    status: 'Active',
+    assignees: JSON.stringify([agent.id]),
+  }
+
+  db.prepare(
+    `insert into missions (id, title, eta, risk, squad, status, assignees)
+     values (@id, @title, @eta, @risk, @squad, @status, @assignees)`
+  ).run(mission)
+
+  logActivity(`🧭 Spawned mission: ${title} (${role})`)
+  broadcast('agent.created', { ...agent, skills: JSON.parse(agent.skills), equipment: JSON.parse(agent.equipment) })
+  broadcast('mission.created', { ...mission, assignees: JSON.parse(mission.assignees) })
+
+  res.json({ ok: true, session, branch, worktree })
+})
+
+app.post('/api/actions/create-repo', requireAuth, async (req, res) => {
+  const { name } = req.body
+  if (!name) return res.status(400).json({ error: 'Missing name' })
+  const repo = await createRepo({ name })
+  logActivity(`📦 Created new repo: ${repo.repo}`)
+  res.json(repo)
 })
 
 const server = http.createServer(app)
