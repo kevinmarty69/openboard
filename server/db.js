@@ -81,6 +81,16 @@ addColumnIfMissing('agents', 'tmux_session', 'text')
 addColumnIfMissing('agents', 'repo', 'text')
 addColumnIfMissing('missions', 'assignees', 'text')
 
+const avatarMap = new Map([
+  ['Zoe', '/avatars/zoe.jpg'],
+  ['Codex', '/avatars/codex.jpg'],
+  ['Claude', '/avatars/claude.jpg'],
+])
+
+avatarMap.forEach((path, name) => {
+  db.prepare('update agents set avatar = ? where name = ? and avatar not like "/avatars/%"').run(path, name)
+})
+
 function seedIfEmpty() {
   if (process.env.SEED_DATA === 'false') return
   const count = db.prepare('select count(*) as count from agents').get().count
