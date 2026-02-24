@@ -1,146 +1,86 @@
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-const agents = [
-  {
-    id: 'A-01',
-    name: 'Zoe',
-    role: 'Orchestrator',
-    level: 27,
-    status: 'Commanding',
-    energy: 92,
-    morale: 88,
-    focus: 95,
-    current: 'Routing 3 active squads',
-    location: 'Bridge',
-    xp: 71,
-    avatar: '🜲',
-  },
-  {
-    id: 'C-17',
-    name: 'Codex',
-    role: 'Backend Alchemist',
-    level: 19,
-    status: 'Shipping',
-    energy: 76,
-    morale: 81,
-    focus: 90,
-    current: 'Refactor payments saga',
-    location: 'Forge',
-    xp: 54,
-    avatar: '⚙️',
-  },
-  {
-    id: 'CL-08',
-    name: 'Claude',
-    role: 'Frontend Ranger',
-    level: 16,
-    status: 'Polishing',
-    energy: 63,
-    morale: 74,
-    focus: 77,
-    current: 'Dashboard HUD redesign',
-    location: 'Atrium',
-    xp: 48,
-    avatar: '🧭',
-  },
-  {
-    id: 'G-05',
-    name: 'Gemini',
-    role: 'Design Seer',
-    level: 22,
-    status: 'Sketching',
-    energy: 84,
-    morale: 92,
-    focus: 86,
-    current: 'Crystal UI palette',
-    location: 'Atelier',
-    xp: 66,
-    avatar: '🔮',
-  },
-  {
-    id: 'MX-31',
-    name: 'Mox',
-    role: 'QA Sentinel',
-    level: 14,
-    status: 'Testing',
-    energy: 58,
-    morale: 69,
-    focus: 73,
-    current: 'E2E run 7/12',
-    location: 'Range',
-    xp: 39,
-    avatar: '🛡️',
-  },
-]
+type Skill = { name: string; value: number }
 
-const missions = [
-  {
-    title: 'E2E suite: onboarding rewrite',
-    eta: '11m',
-    risk: 'Low',
-    squad: 'C-17 + MX-31',
-  },
-  {
-    title: 'AI reviews: billing engine PR #492',
-    eta: '22m',
-    risk: 'Medium',
-    squad: 'Zoe + Gemini',
-  },
-  {
-    title: 'UI snapshots: /agents/board',
-    eta: '4m',
-    risk: 'Low',
-    squad: 'Claude',
-  },
-]
+type Agent = {
+  id: string
+  name: string
+  role: string
+  avatar: string
+  status: string
+  level: number
+  energy: number
+  morale: number
+  focus: number
+  location: string
+  current: string
+  xp: number
+  skills: Skill[]
+  equipment: string[]
+}
 
-const signals = [
-  '🧪 CI green across 4 worktrees',
-  '🛰️ 2 new feature requests triaged',
-  '🛠️ Auto-retry armed for flaky tests',
-  '🧭 Claude flagged a11y contrast drift',
-]
+type Mission = {
+  id: string
+  title: string
+  eta: string
+  risk: string
+  squad: string
+  status: string
+}
 
-const directives = [
-  {
-    title: 'Auto-merge low-risk PRs',
-    detail: 'Requires CI green + 2 AI approvals',
-    state: 'Enabled',
-  },
-  {
-    title: 'Night watch (02:00–06:00)',
-    detail: 'Only incident alerts, no pings',
-    state: 'Enabled',
-  },
-  {
-    title: 'Sentry sweep',
-    detail: 'Spawn agents for new error spikes',
-    state: 'Armed',
-  },
-]
+type Directive = {
+  id: string
+  title: string
+  detail: string
+  state: string
+}
 
-const resources = [
-  { label: 'Compute', value: 68 },
-  { label: 'Context window', value: 74 },
-  { label: 'API budget', value: 57 },
-]
+type Resource = {
+  id: string
+  label: string
+  value: number
+}
 
-const activity = [
+type Activity = {
+  id: string
+  time: string
+  text: string
+}
+
+const recruitTemplates = [
   {
-    time: '14:42',
-    text: 'Codex pushed 3 commits on feat/ledger-sync',
+    name: 'Nova',
+    role: 'Automation Tinkerer',
+    avatar: '🪄',
+    skills: [
+      { name: 'Integrations', value: 72 },
+      { name: 'Scripting', value: 68 },
+      { name: 'Ops', value: 75 },
+    ],
+    equipment: ['Webhook Satchel', 'Cron Charm'],
   },
   {
-    time: '14:39',
-    text: 'Gemini delivered UI spec v2.1',
+    name: 'Rift',
+    role: 'Incident Duelist',
+    avatar: '⚡',
+    skills: [
+      { name: 'Alerts', value: 84 },
+      { name: 'Containment', value: 79 },
+      { name: 'Postmortems', value: 70 },
+    ],
+    equipment: ['Pager Blade', 'Runbook Codex'],
   },
   {
-    time: '14:33',
-    text: 'Zoe approved mission: “Agent HR dashboard”',
-  },
-  {
-    time: '14:27',
-    text: 'Claude triggered snapshot audit (UI)',
+    name: 'Piko',
+    role: 'Pixel Artisan',
+    avatar: '🎮',
+    skills: [
+      { name: 'UI', value: 88 },
+      { name: 'Motion', value: 74 },
+      { name: 'Polish', value: 81 },
+    ],
+    equipment: ['Sprite Loom', 'Palette Orb'],
   },
 ]
 
@@ -155,7 +95,159 @@ function StatBar({ value }: { value: number }) {
   )
 }
 
+function SkillMeter({ skill }: { skill: Skill }) {
+  return (
+    <div className="skill">
+      <span>{skill.name}</span>
+      <div className="skill__track">
+        <span style={{ width: `${skill.value}%` }} />
+      </div>
+      <em>{skill.value}</em>
+    </div>
+  )
+}
+
 function App() {
+  const [authorized, setAuthorized] = useState(false)
+  const [wsToken, setWsToken] = useState<string | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [missions, setMissions] = useState<Mission[]>([])
+  const [directives, setDirectives] = useState<Directive[]>([])
+  const [resources, setResources] = useState<Resource[]>([])
+  const [activity, setActivity] = useState<Activity[]>([])
+
+  const bestAgent = useMemo(() => {
+    if (agents.length === 0) return null
+    return [...agents].sort((a, b) => b.level - a.level)[0]
+  }, [agents])
+
+  useEffect(() => {
+    fetch('/api/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user?.wsToken) {
+          setAuthorized(true)
+          setWsToken(data.user.wsToken)
+        } else {
+          setAuthorized(false)
+        }
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!authorized) return
+    fetch('/api/state')
+      .then((res) => res.json())
+      .then((data) => {
+        setAgents(data.agents || [])
+        setMissions(data.missions || [])
+        setDirectives(data.directives || [])
+        setResources(data.resources || [])
+        setActivity(data.activity || [])
+      })
+  }, [authorized])
+
+  useEffect(() => {
+    if (!wsToken) return
+    const socket = new WebSocket(`${window.location.origin.replace('http', 'ws')}/ws?token=${wsToken}`)
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      if (message.type === 'activity') {
+        setActivity((prev) => [message.payload, ...prev].slice(0, 50))
+      }
+      if (message.type === 'agent.created') {
+        setAgents((prev) => [...prev, message.payload])
+      }
+      if (message.type === 'agent.updated') {
+        setAgents((prev) => prev.map((agent) => (agent.id === message.payload.id ? message.payload : agent)))
+      }
+      if (message.type === 'agent.deleted') {
+        setAgents((prev) => prev.filter((agent) => agent.id !== message.payload.id))
+      }
+      if (message.type.startsWith('mission.')) {
+        fetch('/api/state')
+          .then((res) => res.json())
+          .then((data) => {
+            setMissions(data.missions || [])
+          })
+      }
+      if (message.type.startsWith('directive.')) {
+        fetch('/api/state')
+          .then((res) => res.json())
+          .then((data) => {
+            setDirectives(data.directives || [])
+          })
+      }
+      if (message.type.startsWith('resource.')) {
+        fetch('/api/state')
+          .then((res) => res.json())
+          .then((data) => {
+            setResources(data.resources || [])
+          })
+      }
+    }
+    return () => socket.close()
+  }, [wsToken])
+
+  const recruitAgent = async () => {
+    const template = recruitTemplates[Math.floor(Math.random() * recruitTemplates.length)]
+    const payload = {
+      name: template.name,
+      role: template.role,
+      avatar: template.avatar,
+      level: 8,
+      energy: 80,
+      morale: 82,
+      focus: 78,
+      location: 'HQ Bay',
+      current: 'Onboarding protocol',
+      xp: 20,
+      skills: template.skills,
+      equipment: template.equipment,
+    }
+    await fetch('/api/agents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  }
+
+  const updateAgentStatus = async (agent: Agent, status: string) => {
+    await fetch(`/api/agents/${agent.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, current: status === 'Paused' ? 'Stasis field engaged' : agent.current }),
+    })
+  }
+
+  const fireAgent = async (agent: Agent) => {
+    await fetch(`/api/agents/${agent.id}`, { method: 'DELETE' })
+  }
+
+  const login = () => {
+    window.location.href = '/api/auth/github/login'
+  }
+
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    window.location.reload()
+  }
+
+  if (!authorized) {
+    return (
+      <div className="login">
+        <div className="login__panel">
+          <p className="eyebrow">OpenBoard secure gate</p>
+          <h1>Guild Entry Requires OAuth Seal</h1>
+          <p className="sub">
+            This board is guarded by GitHub OAuth. Only kevinmarty69 is allowed to enter the guild.
+          </p>
+          <button className="primary" onClick={login}>Connect GitHub</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="dashboard">
       <header className="topbar">
@@ -163,8 +255,7 @@ function App() {
           <p className="eyebrow">OpenBoard • Agent Ops Console</p>
           <h1>Guild Ledger</h1>
           <p className="sub">
-            Real-time orchestration of autonomous squads, with RPG cadence and
-            full command authority.
+            Real-time orchestration of autonomous squads, with RPG cadence and full command authority.
           </p>
         </div>
         <div className="status">
@@ -172,8 +263,9 @@ function App() {
             <span className="pulse" />
             Live sync
           </div>
-          <button className="primary">Deploy new agent</button>
+          <button className="primary" onClick={recruitAgent}>Recruit agent</button>
           <button>Queue mission</button>
+          <button onClick={logout}>Logout</button>
         </div>
       </header>
 
@@ -181,56 +273,75 @@ function App() {
         <div className="panel panel--wide">
           <div className="panel__header">
             <h2>Roster</h2>
-            <span>5 active • 2 resting • 1 queued</span>
+            <span>{agents.length} active • {Math.max(0, agents.length - 4)} resting</span>
           </div>
           <div className="roster">
-            <div className="roster__header">
-              <span>Agent</span>
-              <span>Role</span>
-              <span>Status</span>
-              <span>Vitals</span>
-              <span>Quest Log</span>
-              <span>XP</span>
-            </div>
             {agents.map((agent) => (
-              <div className="roster__row" key={agent.id}>
-                <div className="agent">
+              <div className="roster__card" key={agent.id}>
+                <div className="card__header">
                   <div className="agent__avatar">{agent.avatar}</div>
                   <div>
                     <strong>{agent.name}</strong>
-                    <span>{agent.id} • Lvl {agent.level}</span>
+                    <span>{agent.role} • {agent.id}</span>
+                  </div>
+                  <div className={`badge badge--${agent.status.toLowerCase()}`}>
+                    {agent.status}
                   </div>
                 </div>
-                <div className="role">
-                  <strong>{agent.role}</strong>
-                  <span>{agent.location}</span>
-                </div>
-                <div className={`badge badge--${agent.status.toLowerCase()}`}>
-                  {agent.status}
-                </div>
-                <div className="vitals">
-                  <div>
-                    <small>Energy</small>
-                    <StatBar value={agent.energy} />
+                <div className="card__grid">
+                  <div className="stats">
+                    <div>
+                      <small>Level</small>
+                      <h3>{agent.level}</h3>
+                    </div>
+                    <div>
+                      <small>Location</small>
+                      <h3>{agent.location}</h3>
+                    </div>
+                    <div>
+                      <small>XP</small>
+                      <div className="xp__ring">
+                        <span style={{ '--xp': `${agent.xp}%` } as React.CSSProperties} />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <small>Morale</small>
-                    <StatBar value={agent.morale} />
+                  <div className="vitals">
+                    <div>
+                      <small>Energy</small>
+                      <StatBar value={agent.energy} />
+                    </div>
+                    <div>
+                      <small>Morale</small>
+                      <StatBar value={agent.morale} />
+                    </div>
+                    <div>
+                      <small>Focus</small>
+                      <StatBar value={agent.focus} />
+                    </div>
                   </div>
-                  <div>
-                    <small>Focus</small>
-                    <StatBar value={agent.focus} />
+                  <div className="skills">
+                    <small>Skill board</small>
+                    {agent.skills.map((skill) => (
+                      <SkillMeter key={skill.name} skill={skill} />
+                    ))}
+                  </div>
+                  <div className="gear">
+                    <small>Equipment</small>
+                    <ul>
+                      {agent.equipment.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
                 <div className="quest">
                   <strong>{agent.current}</strong>
-                  <span>Last ping 1m ago</span>
+                  <span>Last ping moments ago</span>
                 </div>
-                <div className="xp">
-                  <div className="xp__ring">
-                    <span style={{ '--xp': `${agent.xp}%` } as React.CSSProperties} />
-                  </div>
-                  <em>{agent.xp}%</em>
+                <div className="card__actions">
+                  <button onClick={() => updateAgentStatus(agent, 'Paused')}>Pause</button>
+                  <button onClick={() => updateAgentStatus(agent, 'Active')}>Resume</button>
+                  <button className="danger" onClick={() => fireAgent(agent)}>Release</button>
                 </div>
               </div>
             ))}
@@ -244,7 +355,7 @@ function App() {
           </div>
           <div className="mission">
             {missions.map((mission) => (
-              <div className="mission__item" key={mission.title}>
+              <div className="mission__item" key={mission.id}>
                 <strong>{mission.title}</strong>
                 <div>
                   <span>ETA {mission.eta}</span>
@@ -264,18 +375,18 @@ function App() {
             <span>Auto-scout intel</span>
           </div>
           <ul className="signals">
-            {signals.map((signal) => (
-              <li key={signal}>{signal}</li>
+            {activity.slice(0, 4).map((signal) => (
+              <li key={signal.id}>{signal.text}</li>
             ))}
           </ul>
           <div className="summary">
             <div>
               <h3>Swarm Health</h3>
-              <p>92%</p>
+              <p>{bestAgent ? bestAgent.energy : 92}%</p>
             </div>
             <div>
               <h3>Open PRs</h3>
-              <p>7</p>
+              <p>{missions.length}</p>
             </div>
             <div>
               <h3>CI Velocity</h3>
@@ -293,7 +404,7 @@ function App() {
           </div>
           <div className="directives">
             {directives.map((item) => (
-              <div className="directive" key={item.title}>
+              <div className="directive" key={item.id}>
                 <div>
                   <strong>{item.title}</strong>
                   <span>{item.detail}</span>
@@ -315,7 +426,7 @@ function App() {
           </div>
           <div className="resources">
             {resources.map((resource) => (
-              <div key={resource.label}>
+              <div key={resource.id}>
                 <div className="resources__label">
                   <span>{resource.label}</span>
                   <em>{resource.value}%</em>
@@ -329,11 +440,11 @@ function App() {
           <div className="resource-meta">
             <div>
               <h3>Worktrees</h3>
-              <p>6</p>
+              <p>{resources.length + 3}</p>
             </div>
             <div>
               <h3>Active loops</h3>
-              <p>3</p>
+              <p>{Math.max(1, Math.floor(agents.length / 2))}</p>
             </div>
           </div>
         </div>
@@ -345,7 +456,7 @@ function App() {
           </div>
           <div className="activity">
             {activity.map((entry) => (
-              <div key={entry.time} className="activity__row">
+              <div key={entry.id} className="activity__row">
                 <span>{entry.time}</span>
                 <p>{entry.text}</p>
               </div>
