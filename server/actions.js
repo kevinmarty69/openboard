@@ -1,5 +1,9 @@
 import { exec } from 'node:child_process'
 
+import dotenv from 'dotenv'
+
+dotenv.config()
+
 const ENABLE_SHELL_ACTIONS = process.env.ENABLE_SHELL_ACTIONS === 'true'
 const RAW_ALLOWED = (process.env.ALLOWED_COMMANDS || '')
   .split(',')
