@@ -1,0 +1,329 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
+  color: var(--soft);
+  margin: 0 0 8px;
+}
+
+.topbar h1 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  color: #f5f1e2;
+}
+
+.sub {
+  max-width: 520px;
+  color: var(--soft);
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.status > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(120, 214, 198, 0.12);
+  color: #c8f7ed;
+  border: 1px solid rgba(120, 214, 198, 0.4);
+}
+
+.pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #78d6c6;
+  box-shadow: 0 0 10px rgba(120, 214, 198, 0.7);
+  animation: pulse 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(0, 1fr);
+  gap: 22px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+}
+
+.panel--wide {
+  grid-column: 1 / -1;
+}
+
+.panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 18px;
+  color: var(--soft);
+}
+
+.panel__header h2 {
+  color: #f5f1e2;
+  font-size: 1.4rem;
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roster__header,
+.roster__row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.7fr 1.6fr 1.3fr 0.6fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.roster__header {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--soft);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.roster__row {
+  background: rgba(10, 14, 18, 0.6);
+  border-radius: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.agent {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.agent__avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  background: rgba(255, 200, 87, 0.14);
+  border: 1px solid rgba(255, 200, 87, 0.4);
+}
+
+.agent strong {
+  display: block;
+}
+
+.agent span,
+.role span,
+.quest span {
+  font-size: 0.75rem;
+  color: var(--soft);
+}
+
+.role strong {
+  display: block;
+}
+
+.badge {
+  font-size: 0.72rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid transparent;
+}
+
+.badge--commanding { background: rgba(255, 200, 87, 0.18); border-color: rgba(255, 200, 87, 0.5); }
+.badge--shipping { background: rgba(120, 214, 198, 0.18); border-color: rgba(120, 214, 198, 0.5); }
+.badge--polishing { background: rgba(255, 122, 144, 0.18); border-color: rgba(255, 122, 144, 0.5); }
+.badge--sketching { background: rgba(126, 112, 255, 0.2); border-color: rgba(126, 112, 255, 0.5); }
+.badge--testing { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); }
+
+.vitals {
+  display: grid;
+  gap: 8px;
+}
+
+.vitals small {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--soft);
+  margin-bottom: 4px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.stat__track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.stat__track span {
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffc857, #78d6c6);
+}
+
+.quest strong {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.xp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.xp__ring {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.xp__ring span {
+  --xp: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: conic-gradient(#ffc857 var(--xp), rgba(255, 255, 255, 0.08) 0%);
+}
+
+.mission {
+  display: grid;
+  gap: 14px;
+}
+
+.mission__item {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 14, 18, 0.6);
+  display: grid;
+  gap: 6px;
+}
+
+.mission__item div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--soft);
+}
+
+.risk {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  border: 1px solid transparent;
+}
+
+.risk--low { background: rgba(120, 214, 198, 0.16); border-color: rgba(120, 214, 198, 0.4); }
+.risk--medium { background: rgba(255, 200, 87, 0.16); border-color: rgba(255, 200, 87, 0.4); }
+
+.signals {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  color: var(--soft);
+  font-size: 0.82rem;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.summary div {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(10, 14, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.summary p {
+  font-size: 1.4rem;
+  color: #ffc857;
+  margin: 6px 0 0;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel--wide {
+    grid-column: auto;
+  }
+
+  .roster__header,
+  .roster__row {
+    grid-template-columns: 1.2fr 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .roster__row > :nth-child(n + 3) {
+    grid-column: span 2;
+  }
+}
