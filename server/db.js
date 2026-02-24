@@ -88,7 +88,7 @@ const avatarMap = new Map([
 ])
 
 avatarMap.forEach((path, name) => {
-  db.prepare('update agents set avatar = ? where name = ? and avatar not like "/avatars/%"').run(path, name)
+  db.prepare("update agents set avatar = ? where name = ? and avatar not like '/avatars/%'").run(path, name)
 })
 
 function seedIfEmpty() {
