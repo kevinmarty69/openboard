@@ -27,6 +27,7 @@ type Mission = {
   risk: string
   squad: string
   status: string
+  assignees: string[]
 }
 
 type Directive = {
@@ -115,6 +116,11 @@ function App() {
   const [directives, setDirectives] = useState<Directive[]>([])
   const [resources, setResources] = useState<Resource[]>([])
   const [activity, setActivity] = useState<Activity[]>([])
+  const [missionTitle, setMissionTitle] = useState('')
+  const [missionEta, setMissionEta] = useState('15m')
+  const [missionRisk, setMissionRisk] = useState('Low')
+  const [missionAssignees, setMissionAssignees] = useState<string[]>([])
+  const [broadcastMessage, setBroadcastMessage] = useState('')
 
   const bestAgent = useMemo(() => {
     if (agents.length === 0) return null
@@ -224,6 +230,50 @@ function App() {
     await fetch(`/api/agents/${agent.id}`, { method: 'DELETE' })
   }
 
+  const pauseAll = async () => {
+    await fetch('/api/actions/pause-all', { method: 'POST' })
+  }
+
+  const broadcastOrder = async () => {
+    if (!broadcastMessage.trim()) return
+    await fetch('/api/actions/broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: broadcastMessage }),
+    })
+    setBroadcastMessage('')
+  }
+
+  const createMission = async () => {
+    if (!missionTitle.trim()) return
+    const assignees = missionAssignees
+    await fetch('/api/missions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: missionTitle,
+        eta: missionEta,
+        risk: missionRisk,
+        squad: assignees.join(', ') || 'Unassigned',
+        assignees,
+      }),
+    })
+
+    for (const id of assignees) {
+      const agent = agents.find((item) => item.id === id)
+      if (agent) {
+        await fetch(`/api/actions/agent/${agent.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'assign', message: `Mission: ${missionTitle}` }),
+        })
+      }
+    }
+
+    setMissionTitle('')
+    setMissionAssignees([])
+  }
+
   const login = () => {
     window.location.href = '/api/auth/github/login'
   }
@@ -264,7 +314,7 @@ function App() {
             Live sync
           </div>
           <button className="primary" onClick={recruitAgent}>Recruit agent</button>
-          <button>Queue mission</button>
+          <button onClick={pauseAll}>Pause all</button>
           <button onClick={logout}>Logout</button>
         </div>
       </header>
@@ -363,7 +413,7 @@ function App() {
                     {mission.risk} risk
                   </span>
                 </div>
-                <em>{mission.squad}</em>
+                <em>{mission.assignees?.length ? mission.assignees.join(', ') : mission.squad}</em>
               </div>
             ))}
           </div>
@@ -399,6 +449,59 @@ function App() {
       <section className="grid grid--secondary">
         <div className="panel">
           <div className="panel__header">
+            <h2>Mission Control</h2>
+            <span>Assign the day</span>
+          </div>
+          <div className="mission-form">
+            <label>
+              Mission title
+              <input
+                value={missionTitle}
+                onChange={(event) => setMissionTitle(event.target.value)}
+                placeholder="Deploy agent onboarding revamp"
+              />
+            </label>
+            <div className="mission-form__row">
+              <label>
+                ETA
+                <input value={missionEta} onChange={(event) => setMissionEta(event.target.value)} />
+              </label>
+              <label>
+                Risk
+                <select value={missionRisk} onChange={(event) => setMissionRisk(event.target.value)}>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                </select>
+              </label>
+            </div>
+            <div className="assignees">
+              <span>Assign agents</span>
+              <div>
+                {agents.map((agent) => (
+                  <label key={agent.id}>
+                    <input
+                      type="checkbox"
+                      checked={missionAssignees.includes(agent.id)}
+                      onChange={() => {
+                        setMissionAssignees((prev) =>
+                          prev.includes(agent.id)
+                            ? prev.filter((id) => id !== agent.id)
+                            : [...prev, agent.id]
+                        )
+                      }}
+                    />
+                    {agent.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <button className="primary" onClick={createMission}>Dispatch mission</button>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel__header">
             <h2>Command Center</h2>
             <span>Live directives</span>
           </div>
@@ -413,9 +516,16 @@ function App() {
               </div>
             ))}
           </div>
+          <div className="broadcast">
+            <input
+              value={broadcastMessage}
+              onChange={(event) => setBroadcastMessage(event.target.value)}
+              placeholder="Broadcast order to the guild..."
+            />
+            <button className="primary" onClick={broadcastOrder}>Send</button>
+          </div>
           <div className="command-actions">
-            <button className="primary">Broadcast order</button>
-            <button>Pause all agents</button>
+            <button onClick={pauseAll}>Pause all agents</button>
           </div>
         </div>
 

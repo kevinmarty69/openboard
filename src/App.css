@@ -301,6 +301,67 @@
   gap: 10px;
 }
 
+.mission-form {
+  display: grid;
+  gap: 12px;
+}
+
+.mission-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.mission-form input,
+.mission-form select,
+.broadcast input {
+  background: rgba(10, 14, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #f5f1e2;
+  font: inherit;
+}
+
+.mission-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.assignees {
+  display: grid;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.assignees > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.assignees label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: rgba(10, 14, 18, 0.6);
+  border-radius: 10px;
+  padding: 6px 8px;
+}
+
+.broadcast {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.broadcast input {
+  flex: 1;
+}
+
 .card__actions .danger {
   border-color: rgba(255, 122, 144, 0.5);
   color: #ff7a90;

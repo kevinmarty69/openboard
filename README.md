@@ -29,6 +29,8 @@ GITHUB_ALLOWED_LOGIN=kevinmarty69
 GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
 SESSION_SECRET=change_me
 FRONTEND_URL=http://localhost:5173
+ENABLE_SHELL_ACTIONS=false
+ALLOWED_COMMANDS=tmux,openclaw
 PORT=3000
 ```
 
@@ -42,6 +44,10 @@ PORT=3000
 
 ## WebSocket
 Connect to `/ws?token=<token>` (token returned in `/api/me`).
+
+## Shell actions
+Set `ENABLE_SHELL_ACTIONS=true` to allow tmux/openclaw control from the dashboard.
+Allowed commands are controlled by `ALLOWED_COMMANDS` (comma separated).
 
 ## Deploy
 - Works on Vercel (frontend) + external Node server (or migrate API to serverless later)

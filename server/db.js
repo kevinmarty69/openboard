@@ -29,6 +29,9 @@ db.exec(`
     xp integer not null,
     skills text not null,
     equipment text not null,
+    driver text default 'local',
+    tmux_session text,
+    repo text,
     created_at text default (datetime('now'))
   );
 
@@ -39,6 +42,7 @@ db.exec(`
     risk text,
     squad text,
     status text not null,
+    assignees text,
     created_at text default (datetime('now'))
   );
 
@@ -65,13 +69,25 @@ db.exec(`
   );
 `)
 
+function addColumnIfMissing(table, column, definition) {
+  const columns = db.prepare(`pragma table_info(${table})`).all().map((c) => c.name)
+  if (!columns.includes(column)) {
+    db.exec(`alter table ${table} add column ${column} ${definition}`)
+  }
+}
+
+addColumnIfMissing('agents', 'driver', "text default 'local'")
+addColumnIfMissing('agents', 'tmux_session', 'text')
+addColumnIfMissing('agents', 'repo', 'text')
+addColumnIfMissing('missions', 'assignees', 'text')
+
 function seedIfEmpty() {
   const count = db.prepare('select count(*) as count from agents').get().count
   if (count > 0) return
 
   const insertAgent = db.prepare(`
-    insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment)
-    values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment)
+    insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo)
+    values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo)
   `)
 
   const agents = [
@@ -94,6 +110,9 @@ function seedIfEmpty() {
         { name: 'Triage', value: 88 },
       ]),
       equipment: JSON.stringify(['Signal Wand', 'Ops Ledger', 'Recall Prism']),
+      driver: 'openclaw',
+      tmux_session: null,
+      repo: 'openboard',
     },
     {
       id: 'C-17',
@@ -114,6 +133,9 @@ function seedIfEmpty() {
         { name: 'Testing', value: 78 },
       ]),
       equipment: JSON.stringify(['Runtime Hammer', 'Schema Codex']),
+      driver: 'tmux',
+      tmux_session: 'codex-core',
+      repo: 'openboard',
     },
     {
       id: 'CL-08',
@@ -134,6 +156,9 @@ function seedIfEmpty() {
         { name: 'Speed', value: 72 },
       ]),
       equipment: JSON.stringify(['Pixel Brush', 'Layout Compass']),
+      driver: 'tmux',
+      tmux_session: 'claude-ui',
+      repo: 'openboard',
     },
     {
       id: 'G-05',
@@ -154,6 +179,9 @@ function seedIfEmpty() {
         { name: 'Delight', value: 89 },
       ]),
       equipment: JSON.stringify(['Prism Deck', 'Mood Loom']),
+      driver: 'local',
+      tmux_session: null,
+      repo: 'openboard',
     },
     {
       id: 'MX-31',
@@ -174,12 +202,15 @@ function seedIfEmpty() {
         { name: 'Discipline', value: 77 },
       ]),
       equipment: JSON.stringify(['Assertion Bow', 'Log Shield']),
+      driver: 'tmux',
+      tmux_session: 'qa-sentinel',
+      repo: 'openboard',
     },
   ]
 
   const insertMission = db.prepare(`
-    insert into missions (id, title, eta, risk, squad, status)
-    values (@id, @title, @eta, @risk, @squad, @status)
+    insert into missions (id, title, eta, risk, squad, status, assignees)
+    values (@id, @title, @eta, @risk, @squad, @status, @assignees)
   `)
 
   const insertDirective = db.prepare(`
@@ -205,6 +236,7 @@ function seedIfEmpty() {
       risk: 'Low',
       squad: 'C-17 + MX-31',
       status: 'Active',
+      assignees: JSON.stringify(['C-17', 'MX-31']),
     },
     {
       id: 'M-002',
@@ -213,6 +245,7 @@ function seedIfEmpty() {
       risk: 'Medium',
       squad: 'Zoe + Gemini',
       status: 'Queued',
+      assignees: JSON.stringify(['A-01', 'G-05']),
     },
     {
       id: 'M-003',
@@ -221,6 +254,7 @@ function seedIfEmpty() {
       risk: 'Low',
       squad: 'Claude',
       status: 'Active',
+      assignees: JSON.stringify(['CL-08']),
     },
   ]
 

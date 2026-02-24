@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import http from 'node:http'
 import { WebSocketServer } from 'ws'
 import db from './db.js'
+import { runShell } from './actions.js'
 
 dotenv.config()
 
@@ -43,6 +44,17 @@ function logActivity(text) {
     entry.text
   )
   broadcast('activity', entry)
+}
+
+function shellQuote(value) {
+  const safe = String(value).replace(/'/g, "'\\''")
+  return `'${safe}'`
+}
+
+async function tmuxSend(session, message) {
+  if (!session) return null
+  const cmd = `tmux send-keys -t ${session} ${shellQuote(message)} Enter`
+  return runShell(cmd)
 }
 
 function broadcast(type, payload) {
@@ -119,7 +131,10 @@ app.get('/api/state', requireAuth, (_req, res) => {
     skills: JSON.parse(row.skills),
     equipment: JSON.parse(row.equipment),
   }))
-  const missions = db.prepare('select * from missions order by created_at desc').all()
+  const missions = db.prepare('select * from missions order by created_at desc').all().map((row) => ({
+    ...row,
+    assignees: row.assignees ? JSON.parse(row.assignees) : [],
+  }))
   const directives = db.prepare('select * from directives order by created_at desc').all()
   const resources = db.prepare('select * from resources order by created_at desc').all()
   const activity = db.prepare('select * from activity order by created_at desc limit 30').all()
@@ -143,10 +158,13 @@ app.post('/api/agents', requireAuth, (req, res) => {
     xp: payload.xp || 10,
     skills: JSON.stringify(payload.skills || []),
     equipment: JSON.stringify(payload.equipment || []),
+    driver: payload.driver || 'local',
+    tmux_session: payload.tmux_session || null,
+    repo: payload.repo || null,
   }
   db.prepare(
-    `insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment)
-     values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment)`
+    `insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo)
+     values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo)`
   ).run(agent)
   logActivity(`🧩 Recruited ${agent.name} (${agent.role})`)
   broadcast('agent.created', { ...agent, skills: JSON.parse(agent.skills), equipment: JSON.parse(agent.equipment) })
@@ -167,7 +185,7 @@ app.put('/api/agents/:id', requireAuth, (req, res) => {
   db.prepare(
     `update agents set name=@name, role=@role, avatar=@avatar, status=@status, level=@level,
      energy=@energy, morale=@morale, focus=@focus, location=@location, current=@current, xp=@xp,
-     skills=@skills, equipment=@equipment where id=@id`
+     skills=@skills, equipment=@equipment, driver=@driver, tmux_session=@tmux_session, repo=@repo where id=@id`
   ).run(updated)
   logActivity(`⚔️ Updated ${updated.name} (${updated.status})`)
   broadcast('agent.updated', { ...updated, skills: JSON.parse(updated.skills), equipment: JSON.parse(updated.equipment) })
@@ -193,10 +211,11 @@ app.post('/api/missions', requireAuth, (req, res) => {
     risk: payload.risk || 'Low',
     squad: payload.squad || 'Unassigned',
     status: payload.status || 'Queued',
+    assignees: JSON.stringify(payload.assignees || []),
   }
   db.prepare(
-    `insert into missions (id, title, eta, risk, squad, status)
-     values (@id, @title, @eta, @risk, @squad, @status)`
+    `insert into missions (id, title, eta, risk, squad, status, assignees)
+     values (@id, @title, @eta, @risk, @squad, @status, @assignees)`
   ).run(mission)
   logActivity(`📜 Mission queued: ${mission.title}`)
   broadcast('mission.created', mission)
@@ -207,12 +226,16 @@ app.put('/api/missions/:id', requireAuth, (req, res) => {
   const id = req.params.id
   const existing = db.prepare('select * from missions where id = ?').get(id)
   if (!existing) return res.status(404).json({ error: 'Not found' })
-  const updated = { ...existing, ...req.body }
+  const updated = {
+    ...existing,
+    ...req.body,
+    assignees: JSON.stringify(req.body.assignees ?? (existing.assignees ? JSON.parse(existing.assignees) : [])),
+  }
   db.prepare(
-    `update missions set title=@title, eta=@eta, risk=@risk, squad=@squad, status=@status where id=@id`
+    `update missions set title=@title, eta=@eta, risk=@risk, squad=@squad, status=@status, assignees=@assignees where id=@id`
   ).run(updated)
   logActivity(`🗺️ Mission updated: ${updated.title}`)
-  broadcast('mission.updated', updated)
+  broadcast('mission.updated', { ...updated, assignees: JSON.parse(updated.assignees) })
   res.json(updated)
 })
 
@@ -298,6 +321,71 @@ app.delete('/api/resources/:id', requireAuth, (req, res) => {
 app.get('/api/activity', requireAuth, (_req, res) => {
   const activity = db.prepare('select * from activity order by created_at desc limit 50').all()
   res.json(activity)
+})
+
+app.post('/api/actions/broadcast', requireAuth, (req, res) => {
+  const { message } = req.body
+  if (!message) return res.status(400).json({ error: 'Missing message' })
+  logActivity(`📣 Broadcast: ${message}`)
+  broadcast('broadcast', { message })
+  res.json({ ok: true })
+})
+
+app.post('/api/actions/pause-all', requireAuth, async (_req, res) => {
+  const agents = db.prepare('select * from agents').all()
+  agents.forEach((agent) => {
+    db.prepare('update agents set status = ? where id = ?').run('Paused', agent.id)
+  })
+  for (const agent of agents) {
+    if (agent.driver === 'tmux' && agent.tmux_session) {
+      await tmuxSend(agent.tmux_session, 'Pause. Enter standby mode and await new mission.')
+    }
+  }
+  logActivity('⏸️ All agents paused')
+  broadcast('agents.paused', { ok: true })
+  res.json({ ok: true })
+})
+
+app.post('/api/actions/agent/:id', requireAuth, async (req, res) => {
+  const { id } = req.params
+  const { action, message } = req.body
+  const agent = db.prepare('select * from agents where id = ?').get(id)
+  if (!agent) return res.status(404).json({ error: 'Not found' })
+
+  if (action === 'pause') {
+    db.prepare('update agents set status = ? where id = ?').run('Paused', id)
+    if (agent.driver === 'tmux' && agent.tmux_session) {
+      await tmuxSend(agent.tmux_session, message || 'Pause. Enter standby mode and await new mission.')
+    }
+    logActivity(`⏸️ ${agent.name} paused`)
+  }
+
+  if (action === 'resume') {
+    db.prepare('update agents set status = ? where id = ?').run('Active', id)
+    if (agent.driver === 'tmux' && agent.tmux_session) {
+      await tmuxSend(agent.tmux_session, message || 'Resume active duty.')
+    }
+    logActivity(`▶️ ${agent.name} resumed`)
+  }
+
+  if (action === 'assign') {
+    if (agent.driver === 'tmux' && agent.tmux_session && message) {
+      await tmuxSend(agent.tmux_session, message)
+    }
+    if (agent.driver === 'openclaw' && message) {
+      await runShell(`openclaw system event --text ${shellQuote(`Mission for ${agent.name}: ${message}`)} --mode now`)
+    }
+    logActivity(`🗺️ Mission sent to ${agent.name}`)
+  }
+
+  if (action === 'terminate') {
+    if (agent.driver === 'tmux' && agent.tmux_session) {
+      await runShell(`tmux kill-session -t ${agent.tmux_session}`)
+    }
+    logActivity(`🧨 Terminated ${agent.name} session`)
+  }
+
+  res.json({ ok: true })
 })
 
 const server = http.createServer(app)
