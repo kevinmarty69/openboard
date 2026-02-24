@@ -7,7 +7,7 @@ import { WebSocketServer } from 'ws'
 import db from './db.js'
 import { runShell } from './actions.js'
 import { spawnMissionWorktree, createRepo } from './orchestrator.js'
-import { listPRs, prChecks, autoMerge } from './gh.js'
+import { listPRs, prChecks, prDetails, autoMerge } from './gh.js'
 
 dotenv.config()
 
@@ -485,6 +485,41 @@ app.post('/api/gh/prs/:number/merge', requireAuth, async (req, res) => {
   logActivity(`✅ Auto-merge armed for PR #${req.params.number}`)
   res.json({ ok: true })
 })
+
+const AUTOSWEEP_INTERVAL = 2 * 60 * 1000
+
+async function sweepAutoMerge() {
+  try {
+    const prs = await listPRs('kevinmarty69/openboard')
+    for (const pr of prs) {
+      const checks = await prChecks('kevinmarty69/openboard', pr.number)
+      const details = await prDetails('kevinmarty69/openboard', pr.number)
+
+      const allChecksPassed = checks.length > 0 && checks.every((c) => c.conclusion === 'success')
+      const mergeable = details.mergeable === 'MERGEABLE' || details.mergeable === 'UNKNOWN'
+      const reviewOk = details.reviewDecision === 'APPROVED' || details.reviewDecision === 'REVIEW_REQUIRED'
+
+      const files = details.files || []
+      const uiChanged = files.some((file) =>
+        file.path?.startsWith('src/') || file.path?.endsWith('.css') || file.path?.endsWith('.tsx')
+      )
+      const body = details.body || ''
+      const hasScreenshot = body.toLowerCase().includes('screenshot') || body.includes('![')
+
+      if (uiChanged && !hasScreenshot) continue
+      if (!allChecksPassed) continue
+      if (!mergeable) continue
+      if (!reviewOk) continue
+
+      await autoMerge('kevinmarty69/openboard', pr.number)
+      logActivity(`🤖 Auto-merge armed for PR #${pr.number}`)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+setInterval(sweepAutoMerge, AUTOSWEEP_INTERVAL)
 
 const server = http.createServer(app)
 const wss = new WebSocketServer({ noServer: true })

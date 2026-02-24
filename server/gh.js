@@ -13,6 +13,12 @@ export async function prChecks(repo, prNumber) {
   return JSON.parse(out || '[]')
 }
 
+export async function prDetails(repo, prNumber) {
+  const cmd = `gh pr view ${prNumber} ${repo ? `--repo ${repo}` : ''} --json body,files,mergeable,reviewDecision`;
+  const out = await runShell(cmd)
+  return JSON.parse(out || '{}')
+}
+
 export async function autoMerge(repo, prNumber) {
   const cmd = `gh pr merge ${prNumber} ${repo ? `--repo ${repo}` : ''} --squash --auto`;
   return runShell(cmd)

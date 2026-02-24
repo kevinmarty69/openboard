@@ -50,6 +50,12 @@ Connect to `/ws?token=<token>` (token returned in `/api/me`).
 Set `ENABLE_SHELL_ACTIONS=true` to allow tmux/openclaw control from the dashboard.
 Allowed commands are controlled by `ALLOWED_COMMANDS` (comma separated).
 
+## Auto-merge rules
+The server runs an auto-merge sweep every 2 minutes:
+- All PR checks must be green
+- PR must be mergeable
+- If UI files changed (src/*.tsx or *.css), PR body must include a screenshot
+
 ## Deploy
 - Works on Vercel (frontend) + external Node server (or migrate API to serverless later)
 - Future: Supabase migration (Postgres)
