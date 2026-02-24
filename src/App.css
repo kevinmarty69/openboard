@@ -1,3 +1,71 @@
+.shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+
+.nav {
+  position: sticky;
+  top: 24px;
+  height: calc(100vh - 48px);
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(12, 16, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.nav__brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav__brand span {
+  font-size: 1.4rem;
+}
+
+.nav__brand strong {
+  display: block;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nav__brand p {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+  color: var(--soft);
+}
+
+.nav__section {
+  display: grid;
+  gap: 8px;
+}
+
+.nav__section button {
+  justify-content: flex-start;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.nav__section button.active {
+  background: linear-gradient(120deg, rgba(255, 200, 87, 0.2), rgba(120, 214, 198, 0.2));
+  border-color: rgba(255, 200, 87, 0.6);
+  box-shadow: var(--glow);
+}
+
+.nav__footer {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+}
+
 .dashboard {
   display: flex;
   flex-direction: column;
@@ -618,6 +686,22 @@
 }
 
 @media (max-width: 980px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    position: relative;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .nav__section {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .topbar {
     flex-direction: column;
     align-items: flex-start;

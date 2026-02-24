@@ -129,6 +129,7 @@ function App() {
   const [productName, setProductName] = useState('')
   const [productTemplate, setProductTemplate] = useState('B2B')
   const [productRole, setProductRole] = useState('builder')
+  const [view, setView] = useState<'overview' | 'agents' | 'missions' | 'factory' | 'prs' | 'activity' | 'settings'>('overview')
 
   const bestAgent = useMemo(() => {
     if (agents.length === 0) return null
@@ -354,342 +355,511 @@ function App() {
   }
 
   return (
-    <div className="dashboard">
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">OpenBoard • Agent Ops Console</p>
-          <h1>Guild Ledger</h1>
-          <p className="sub">
-            Real-time orchestration of autonomous squads, with RPG cadence and full command authority.
-          </p>
-        </div>
-        <div className="status">
+    <div className="shell">
+      <aside className="nav">
+        <div className="nav__brand">
+          <span>⚔️</span>
           <div>
-            <span className="pulse" />
-            Live sync
+            <strong>OpenBoard</strong>
+            <p>Guild HQ</p>
           </div>
-          <button className="primary" onClick={recruitAgent}>Recruit agent</button>
+        </div>
+        <div className="nav__section">
+          <button className={view === 'overview' ? 'active' : ''} onClick={() => setView('overview')}>Overview</button>
+          <button className={view === 'agents' ? 'active' : ''} onClick={() => setView('agents')}>Agents</button>
+          <button className={view === 'missions' ? 'active' : ''} onClick={() => setView('missions')}>Missions</button>
+          <button className={view === 'factory' ? 'active' : ''} onClick={() => setView('factory')}>Factory</button>
+          <button className={view === 'prs' ? 'active' : ''} onClick={() => setView('prs')}>PR & CI</button>
+          <button className={view === 'activity' ? 'active' : ''} onClick={() => setView('activity')}>Activity</button>
+          <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}>Settings</button>
+        </div>
+        <div className="nav__footer">
+          <button className="primary" onClick={recruitAgent}>Recruit</button>
           <button onClick={pauseAll}>Pause all</button>
           <button onClick={logout}>Logout</button>
         </div>
-      </header>
+      </aside>
 
-      <section className="grid">
-        <div className="panel panel--wide">
-          <div className="panel__header">
-            <h2>Roster</h2>
-            <span>{agents.length} active • {Math.max(0, agents.length - 4)} resting</span>
+      <div className="dashboard">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">OpenBoard • Agent Ops Console</p>
+            <h1>Guild Ledger</h1>
+            <p className="sub">
+              Real-time orchestration of autonomous squads, with RPG cadence and full command authority.
+            </p>
           </div>
-          <div className="roster">
-            {agents.map((agent) => (
-              <div className="roster__card" key={agent.id}>
-                <div className="card__header">
-                  <div className="agent__avatar">{agent.avatar}</div>
-                  <div>
-                    <strong>{agent.name}</strong>
-                    <span>{agent.role} • {agent.id}</span>
-                  </div>
-                  <div className={`badge badge--${agent.status.toLowerCase()}`}>
-                    {agent.status}
-                  </div>
-                </div>
-                <div className="card__grid">
-                  <div className="stats">
-                    <div>
-                      <small>Level</small>
-                      <h3>{agent.level}</h3>
-                    </div>
-                    <div>
-                      <small>Location</small>
-                      <h3>{agent.location}</h3>
-                    </div>
-                    <div>
-                      <small>XP</small>
-                      <div className="xp__ring">
-                        <span style={{ '--xp': `${agent.xp}%` } as React.CSSProperties} />
+          <div className="status">
+            <div>
+              <span className="pulse" />
+              Live sync
+            </div>
+          </div>
+        </header>
+
+        {view === 'overview' && (
+          <section className="grid">
+            <div className="panel panel--wide">
+              <div className="panel__header">
+                <h2>Roster</h2>
+                <span>{agents.length} active • {Math.max(0, agents.length - 4)} resting</span>
+              </div>
+              <div className="roster">
+                {agents.map((agent) => (
+                  <div className="roster__card" key={agent.id}>
+                    <div className="card__header">
+                      <div className="agent__avatar">{agent.avatar}</div>
+                      <div>
+                        <strong>{agent.name}</strong>
+                        <span>{agent.role} • {agent.id}</span>
+                      </div>
+                      <div className={`badge badge--${agent.status.toLowerCase()}`}>
+                        {agent.status}
                       </div>
                     </div>
-                  </div>
-                  <div className="vitals">
-                    <div>
-                      <small>Energy</small>
-                      <StatBar value={agent.energy} />
+                    <div className="card__grid">
+                      <div className="stats">
+                        <div>
+                          <small>Level</small>
+                          <h3>{agent.level}</h3>
+                        </div>
+                        <div>
+                          <small>Location</small>
+                          <h3>{agent.location}</h3>
+                        </div>
+                        <div>
+                          <small>XP</small>
+                          <div className="xp__ring">
+                            <span style={{ '--xp': `${agent.xp}%` } as React.CSSProperties} />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="vitals">
+                        <div>
+                          <small>Energy</small>
+                          <StatBar value={agent.energy} />
+                        </div>
+                        <div>
+                          <small>Morale</small>
+                          <StatBar value={agent.morale} />
+                        </div>
+                        <div>
+                          <small>Focus</small>
+                          <StatBar value={agent.focus} />
+                        </div>
+                      </div>
+                      <div className="skills">
+                        <small>Skill board</small>
+                        {agent.skills.map((skill) => (
+                          <SkillMeter key={skill.name} skill={skill} />
+                        ))}
+                      </div>
+                      <div className="gear">
+                        <small>Equipment</small>
+                        <ul>
+                          {agent.equipment.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                    <div>
-                      <small>Morale</small>
-                      <StatBar value={agent.morale} />
+                    <div className="quest">
+                      <strong>{agent.current}</strong>
+                      <span>Last ping moments ago</span>
                     </div>
-                    <div>
-                      <small>Focus</small>
-                      <StatBar value={agent.focus} />
+                    <div className="card__actions">
+                      <button onClick={() => updateAgentStatus(agent, 'Paused')}>Pause</button>
+                      <button onClick={() => updateAgentStatus(agent, 'Active')}>Resume</button>
+                      <button className="danger" onClick={() => fireAgent(agent)}>Release</button>
                     </div>
                   </div>
-                  <div className="skills">
-                    <small>Skill board</small>
-                    {agent.skills.map((skill) => (
-                      <SkillMeter key={skill.name} skill={skill} />
-                    ))}
-                  </div>
-                  <div className="gear">
-                    <small>Equipment</small>
-                    <ul>
-                      {agent.equipment.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="quest">
-                  <strong>{agent.current}</strong>
-                  <span>Last ping moments ago</span>
-                </div>
-                <div className="card__actions">
-                  <button onClick={() => updateAgentStatus(agent, 'Paused')}>Pause</button>
-                  <button onClick={() => updateAgentStatus(agent, 'Active')}>Resume</button>
-                  <button className="danger" onClick={() => fireAgent(agent)}>Release</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel__header">
-            <h2>Mission Queue</h2>
-            <span>Next 60 minutes</span>
-          </div>
-          <div className="mission">
-            {missions.map((mission) => (
-              <div className="mission__item" key={mission.id}>
-                <strong>{mission.title}</strong>
-                <div>
-                  <span>ETA {mission.eta}</span>
-                  <span className={`risk risk--${mission.risk.toLowerCase()}`}>
-                    {mission.risk} risk
-                  </span>
-                </div>
-                <em>{mission.assignees?.length ? mission.assignees.join(', ') : mission.squad}</em>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="panel__header">
-            <h2>PR & CI Watch</h2>
-            <span>Open PRs</span>
-          </div>
-          <div className="pr-list">
-            {prs.length === 0 && <p className="empty">No open PRs</p>}
-            {prs.map((pr) => (
-              <div key={pr.number} className="pr-item">
-                <strong>#{pr.number} {pr.title}</strong>
-                <span>{pr.author?.login} • {pr.headRefName}</span>
-              </div>
-            ))}
-          </div>
-          <div className="summary">
-            <div>
-              <h3>Swarm Health</h3>
-              <p>{agents.length ? Math.round(agents.reduce((acc, agent) => acc + agent.energy, 0) / agents.length) : 0}%</p>
-            </div>
-            <div>
-              <h3>Open PRs</h3>
-              <p>{prs.length}</p>
-            </div>
-            <div>
-              <h3>CI Velocity</h3>
-              <p>{prs.length ? `${Math.max(1, Math.round((prs.length + agents.length) / 3))}x` : '—'}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid--secondary">
-        <div className="panel">
-          <div className="panel__header">
-            <h2>Mission Control</h2>
-            <span>Assign the day</span>
-          </div>
-          <div className="mission-form">
-            <label>
-              Mission title
-              <input
-                value={missionTitle}
-                onChange={(event) => setMissionTitle(event.target.value)}
-                placeholder="Deploy agent onboarding revamp"
-              />
-            </label>
-            <label>
-              Mission prompt (for Codex)
-              <textarea
-                value={missionPrompt}
-                onChange={(event) => setMissionPrompt(event.target.value)}
-                placeholder="Describe the task in detail. Include constraints, files, tests, and definition of done."
-              />
-            </label>
-            <div className="mission-form__row">
-              <label>
-                Role
-                <input value={spawnRole} onChange={(event) => setSpawnRole(event.target.value)} />
-              </label>
-              <label>
-                Repo path
-                <input value={repoPath} onChange={(event) => setRepoPath(event.target.value)} />
-              </label>
-            </div>
-            <div className="mission-form__row">
-              <label>
-                ETA
-                <input value={missionEta} onChange={(event) => setMissionEta(event.target.value)} />
-              </label>
-              <label>
-                Risk
-                <select value={missionRisk} onChange={(event) => setMissionRisk(event.target.value)}>
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                </select>
-              </label>
-            </div>
-            <div className="assignees">
-              <span>Assign existing agents</span>
-              <div>
-                {agents.map((agent) => (
-                  <label key={agent.id}>
-                    <input
-                      type="checkbox"
-                      checked={missionAssignees.includes(agent.id)}
-                      onChange={() => {
-                        setMissionAssignees((prev) =>
-                          prev.includes(agent.id)
-                            ? prev.filter((id) => id !== agent.id)
-                            : [...prev, agent.id]
-                        )
-                      }}
-                    />
-                    {agent.name}
-                  </label>
                 ))}
               </div>
             </div>
-            <div className="mission-actions">
-              <button className="primary" onClick={createMission}>Dispatch mission</button>
-              <button onClick={spawnMission}>Spawn mission agent</button>
-            </div>
-          </div>
-        </div>
 
-        <div className="panel">
-          <div className="panel__header">
-            <h2>Command Center</h2>
-            <span>Live directives</span>
-          </div>
-          <div className="directives">
-            {directives.map((item) => (
-              <div className="directive" key={item.id}>
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Mission Queue</h2>
+                <span>Next 60 minutes</span>
+              </div>
+              <div className="mission">
+                {missions.map((mission) => (
+                  <div className="mission__item" key={mission.id}>
+                    <strong>{mission.title}</strong>
+                    <div>
+                      <span>ETA {mission.eta}</span>
+                      <span className={`risk risk--${mission.risk.toLowerCase()}`}>
+                        {mission.risk} risk
+                      </span>
+                    </div>
+                    <em>{mission.assignees?.length ? mission.assignees.join(', ') : mission.squad}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel__header">
+                <h2>PR & CI Watch</h2>
+                <span>Open PRs</span>
+              </div>
+              <div className="pr-list">
+                {prs.length === 0 && <p className="empty">No open PRs</p>}
+                {prs.map((pr) => (
+                  <div key={pr.number} className="pr-item">
+                    <strong>#{pr.number} {pr.title}</strong>
+                    <span>{pr.author?.login} • {pr.headRefName}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="summary">
                 <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
+                  <h3>Swarm Health</h3>
+                  <p>{agents.length ? Math.round(agents.reduce((acc, agent) => acc + agent.energy, 0) / agents.length) : 0}%</p>
                 </div>
-                <button className="chip">{item.state}</button>
+                <div>
+                  <h3>Open PRs</h3>
+                  <p>{prs.length}</p>
+                </div>
+                <div>
+                  <h3>CI Velocity</h3>
+                  <p>{prs.length ? `${Math.max(1, Math.round((prs.length + agents.length) / 3))}x` : '—'}</p>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="broadcast">
-            <input
-              value={broadcastMessage}
-              onChange={(event) => setBroadcastMessage(event.target.value)}
-              placeholder="Broadcast order to the guild..."
-            />
-            <button className="primary" onClick={broadcastOrder}>Send</button>
-          </div>
-          <div className="command-actions">
-            <button onClick={pauseAll}>Pause all agents</button>
-          </div>
-          <div className="repo-form">
-            <label>
-              New product repo
-              <input
-                value={repoName}
-                onChange={(event) => setRepoName(event.target.value)}
-                placeholder="pixel-invoicing"
-              />
-            </label>
-            <button className="primary" onClick={createRepo}>Create public repo</button>
-          </div>
-          <div className="repo-form">
-            <label>
-              Product factory
-              <input
-                value={productName}
-                onChange={(event) => setProductName(event.target.value)}
-                placeholder="billing-paladin"
-              />
-            </label>
-            <div className="mission-form__row">
-              <label>
-                Template
-                <select value={productTemplate} onChange={(event) => setProductTemplate(event.target.value)}>
-                  <option>B2B</option>
-                  <option>B2C</option>
-                  <option>OSS</option>
-                </select>
-              </label>
-              <label>
-                Role
-                <input value={productRole} onChange={(event) => setProductRole(event.target.value)} />
-              </label>
             </div>
-            <button className="primary" onClick={createProduct}>Create product + spawn</button>
-          </div>
-        </div>
+          </section>
+        )}
 
-        <div className="panel">
-          <div className="panel__header">
-            <h2>Resource Forge</h2>
-            <span>Capacity meter</span>
-          </div>
-          <div className="resources">
-            {resources.map((resource) => (
-              <div key={resource.id}>
-                <div className="resources__label">
-                  <span>{resource.label}</span>
-                  <em>{resource.value}%</em>
-                </div>
-                <div className="resources__track">
-                  <span style={{ width: `${resource.value}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="resource-meta">
-            <div>
-              <h3>Worktrees</h3>
-              <p>{resources.length + 3}</p>
+        {view === 'agents' && (
+          <section className="panel">
+            <div className="panel__header">
+              <h2>Agent Roster</h2>
+              <span>Operations staff</span>
             </div>
-            <div>
-              <h3>Active loops</h3>
-              <p>{Math.max(1, Math.floor(agents.length / 2))}</p>
+            <div className="roster">
+              {agents.map((agent) => (
+                <div className="roster__card" key={agent.id}>
+                  <div className="card__header">
+                    <div className="agent__avatar">{agent.avatar}</div>
+                    <div>
+                      <strong>{agent.name}</strong>
+                      <span>{agent.role} • {agent.id}</span>
+                    </div>
+                    <div className={`badge badge--${agent.status.toLowerCase()}`}>
+                      {agent.status}
+                    </div>
+                  </div>
+                  <div className="card__grid">
+                    <div className="stats">
+                      <div>
+                        <small>Level</small>
+                        <h3>{agent.level}</h3>
+                      </div>
+                      <div>
+                        <small>Location</small>
+                        <h3>{agent.location}</h3>
+                      </div>
+                      <div>
+                        <small>XP</small>
+                        <div className="xp__ring">
+                          <span style={{ '--xp': `${agent.xp}%` } as React.CSSProperties} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="vitals">
+                      <div>
+                        <small>Energy</small>
+                        <StatBar value={agent.energy} />
+                      </div>
+                      <div>
+                        <small>Morale</small>
+                        <StatBar value={agent.morale} />
+                      </div>
+                      <div>
+                        <small>Focus</small>
+                        <StatBar value={agent.focus} />
+                      </div>
+                    </div>
+                    <div className="skills">
+                      <small>Skill board</small>
+                      {agent.skills.map((skill) => (
+                        <SkillMeter key={skill.name} skill={skill} />
+                      ))}
+                    </div>
+                    <div className="gear">
+                      <small>Equipment</small>
+                      <ul>
+                        {agent.equipment.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="quest">
+                    <strong>{agent.current}</strong>
+                    <span>Last ping moments ago</span>
+                  </div>
+                  <div className="card__actions">
+                    <button onClick={() => updateAgentStatus(agent, 'Paused')}>Pause</button>
+                    <button onClick={() => updateAgentStatus(agent, 'Active')}>Resume</button>
+                    <button className="danger" onClick={() => fireAgent(agent)}>Release</button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
+          </section>
+        )}
 
-        <div className="panel">
-          <div className="panel__header">
-            <h2>Activity Log</h2>
-            <span>Last 20 minutes</span>
-          </div>
-          <div className="activity">
-            {activity.map((entry) => (
-              <div key={entry.id} className="activity__row">
-                <span>{entry.time}</span>
-                <p>{entry.text}</p>
+        {view === 'missions' && (
+          <section className="grid grid--secondary">
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Mission Control</h2>
+                <span>Assign the day</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="mission-form">
+                <label>
+                  Mission title
+                  <input
+                    value={missionTitle}
+                    onChange={(event) => setMissionTitle(event.target.value)}
+                    placeholder="Deploy agent onboarding revamp"
+                  />
+                </label>
+                <label>
+                  Mission prompt (for Codex)
+                  <textarea
+                    value={missionPrompt}
+                    onChange={(event) => setMissionPrompt(event.target.value)}
+                    placeholder="Describe the task in detail. Include constraints, files, tests, and definition of done."
+                  />
+                </label>
+                <div className="mission-form__row">
+                  <label>
+                    Role
+                    <input value={spawnRole} onChange={(event) => setSpawnRole(event.target.value)} />
+                  </label>
+                  <label>
+                    Repo path
+                    <input value={repoPath} onChange={(event) => setRepoPath(event.target.value)} />
+                  </label>
+                </div>
+                <div className="mission-form__row">
+                  <label>
+                    ETA
+                    <input value={missionEta} onChange={(event) => setMissionEta(event.target.value)} />
+                  </label>
+                  <label>
+                    Risk
+                    <select value={missionRisk} onChange={(event) => setMissionRisk(event.target.value)}>
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="assignees">
+                  <span>Assign existing agents</span>
+                  <div>
+                    {agents.map((agent) => (
+                      <label key={agent.id}>
+                        <input
+                          type="checkbox"
+                          checked={missionAssignees.includes(agent.id)}
+                          onChange={() => {
+                            setMissionAssignees((prev) =>
+                              prev.includes(agent.id)
+                                ? prev.filter((id) => id !== agent.id)
+                                : [...prev, agent.id]
+                            )
+                          }}
+                        />
+                        {agent.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="mission-actions">
+                  <button className="primary" onClick={createMission}>Dispatch mission</button>
+                  <button onClick={spawnMission}>Spawn mission agent</button>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Mission Queue</h2>
+                <span>Active + queued</span>
+              </div>
+              <div className="mission">
+                {missions.map((mission) => (
+                  <div className="mission__item" key={mission.id}>
+                    <strong>{mission.title}</strong>
+                    <div>
+                      <span>ETA {mission.eta}</span>
+                      <span className={`risk risk--${mission.risk.toLowerCase()}`}>
+                        {mission.risk} risk
+                      </span>
+                    </div>
+                    <em>{mission.assignees?.length ? mission.assignees.join(', ') : mission.squad}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {view === 'factory' && (
+          <section className="grid grid--secondary">
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Product Factory</h2>
+                <span>New venture launcher</span>
+              </div>
+              <div className="repo-form">
+                <label>
+                  New product repo
+                  <input
+                    value={repoName}
+                    onChange={(event) => setRepoName(event.target.value)}
+                    placeholder="pixel-invoicing"
+                  />
+                </label>
+                <button className="primary" onClick={createRepo}>Create public repo</button>
+              </div>
+              <div className="repo-form">
+                <label>
+                  Product factory
+                  <input
+                    value={productName}
+                    onChange={(event) => setProductName(event.target.value)}
+                    placeholder="billing-paladin"
+                  />
+                </label>
+                <div className="mission-form__row">
+                  <label>
+                    Template
+                    <select value={productTemplate} onChange={(event) => setProductTemplate(event.target.value)}>
+                      <option>B2B</option>
+                      <option>B2C</option>
+                      <option>OSS</option>
+                    </select>
+                  </label>
+                  <label>
+                    Role
+                    <input value={productRole} onChange={(event) => setProductRole(event.target.value)} />
+                  </label>
+                </div>
+                <button className="primary" onClick={createProduct}>Create product + spawn</button>
+              </div>
+            </div>
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Command Center</h2>
+                <span>Live directives</span>
+              </div>
+              <div className="directives">
+                {directives.map((item) => (
+                  <div className="directive" key={item.id}>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{item.detail}</span>
+                    </div>
+                    <button className="chip">{item.state}</button>
+                  </div>
+                ))}
+              </div>
+              <div className="broadcast">
+                <input
+                  value={broadcastMessage}
+                  onChange={(event) => setBroadcastMessage(event.target.value)}
+                  placeholder="Broadcast order to the guild..."
+                />
+                <button className="primary" onClick={broadcastOrder}>Send</button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {view === 'prs' && (
+          <section className="panel">
+            <div className="panel__header">
+              <h2>PR & CI Watch</h2>
+              <span>Auto-merge running every 2 minutes</span>
+            </div>
+            <div className="pr-list">
+              {prs.length === 0 && <p className="empty">No open PRs</p>}
+              {prs.map((pr) => (
+                <div key={pr.number} className="pr-item">
+                  <strong>#{pr.number} {pr.title}</strong>
+                  <span>{pr.author?.login} • {pr.headRefName}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {view === 'activity' && (
+          <section className="panel">
+            <div className="panel__header">
+              <h2>Activity Log</h2>
+              <span>Last 20 minutes</span>
+            </div>
+            <div className="activity">
+              {activity.map((entry) => (
+                <div key={entry.id} className="activity__row">
+                  <span>{entry.time}</span>
+                  <p>{entry.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {view === 'settings' && (
+          <section className="grid grid--secondary">
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Resource Forge</h2>
+                <span>Capacity meter</span>
+              </div>
+              <div className="resources">
+                {resources.map((resource) => (
+                  <div key={resource.id}>
+                    <div className="resources__label">
+                      <span>{resource.label}</span>
+                      <em>{resource.value}%</em>
+                    </div>
+                    <div className="resources__track">
+                      <span style={{ width: `${resource.value}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="resource-meta">
+                <div>
+                  <h3>Worktrees</h3>
+                  <p>{resources.length + 3}</p>
+                </div>
+                <div>
+                  <h3>Active loops</h3>
+                  <p>{Math.max(1, Math.floor(agents.length / 2))}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <div className="panel__header">
+                <h2>Global Controls</h2>
+                <span>Emergency levers</span>
+              </div>
+              <div className="command-actions">
+                <button onClick={pauseAll}>Pause all agents</button>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   )
 }
