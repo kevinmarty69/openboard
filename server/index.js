@@ -124,6 +124,14 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/me', (req, res) => {
   if (!req.session?.user) return res.status(200).json({ user: null })
+  if (req.session.user?.wsToken && !wsTokens.has(req.session.user.wsToken)) {
+    wsTokens.set(req.session.user.wsToken, req.session.user.login)
+  }
+  if (!req.session.user?.wsToken) {
+    const wsToken = nanoid(24)
+    wsTokens.set(wsToken, req.session.user.login)
+    req.session.user.wsToken = wsToken
+  }
   res.json({ user: req.session.user })
 })
 
