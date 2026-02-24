@@ -102,7 +102,7 @@ const nicknameMap = new Map([
 ])
 
 nicknameMap.forEach((nickname, name) => {
-  db.prepare('update agents set nickname = ? where name = ? and (nickname is null or nickname = "")').run(nickname, name)
+  db.prepare("update agents set nickname = ? where name = ? and (nickname is null or nickname = '')").run(nickname, name)
 })
 
 function seedIfEmpty() {
