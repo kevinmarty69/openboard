@@ -408,7 +408,13 @@ function App() {
                 {agents.map((agent) => (
                   <div className="roster__card" key={agent.id}>
                     <div className="card__header">
-                      <div className="agent__avatar">{agent.avatar}</div>
+                      <div className="agent__avatar">
+                        {agent.avatar?.startsWith('/') ? (
+                          <img src={agent.avatar} alt={agent.name} />
+                        ) : (
+                          agent.avatar
+                        )}
+                      </div>
                       <div>
                         <strong>{agent.name}</strong>
                         <span>{agent.role} • {agent.id}</span>
@@ -540,7 +546,13 @@ function App() {
               {agents.map((agent) => (
                 <div className="roster__card" key={agent.id}>
                   <div className="card__header">
-                    <div className="agent__avatar">{agent.avatar}</div>
+                    <div className="agent__avatar">
+                      {agent.avatar?.startsWith('/') ? (
+                        <img src={agent.avatar} alt={agent.name} />
+                      ) : (
+                        agent.avatar
+                      )}
+                    </div>
                     <div>
                       <strong>{agent.name}</strong>
                       <span>{agent.role} • {agent.id}</span>
