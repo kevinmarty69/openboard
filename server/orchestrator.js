@@ -1,33 +1,5 @@
-import { exec } from 'node:child_process'
 import { nanoid } from 'nanoid'
-
-const ENABLE_SHELL_ACTIONS = process.env.ENABLE_SHELL_ACTIONS === 'true'
-const ALLOWED_COMMANDS = (process.env.ALLOWED_COMMANDS || '')
-  .split(',')
-  .map((cmd) => cmd.trim())
-  .filter(Boolean)
-
-function isAllowed(cmd) {
-  if (!ENABLE_SHELL_ACTIONS) return false
-  if (ALLOWED_COMMANDS.length === 0) return false
-  return ALLOWED_COMMANDS.some((allowed) => cmd.startsWith(allowed))
-}
-
-function runShell(cmd) {
-  return new Promise((resolve, reject) => {
-    if (!isAllowed(cmd)) {
-      reject(new Error('Command not allowed'))
-      return
-    }
-    exec(cmd, { timeout: 120_000 }, (err, stdout, stderr) => {
-      if (err) {
-        reject(new Error(stderr || err.message))
-        return
-      }
-      resolve(stdout.trim())
-    })
-  })
-}
+import { runShell } from './actions.js'
 
 export async function spawnMissionWorktree({
   repoPath,
