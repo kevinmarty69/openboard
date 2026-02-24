@@ -125,6 +125,10 @@ function App() {
   const [repoPath, setRepoPath] = useState('/Users/kevinmarty/opendev/openboard')
   const [repoName, setRepoName] = useState('')
   const [broadcastMessage, setBroadcastMessage] = useState('')
+  const [prs, setPrs] = useState<any[]>([])
+  const [productName, setProductName] = useState('')
+  const [productTemplate, setProductTemplate] = useState('B2B')
+  const [productRole, setProductRole] = useState('builder')
 
   const bestAgent = useMemo(() => {
     if (agents.length === 0) return null
@@ -155,6 +159,11 @@ function App() {
         setResources(data.resources || [])
         setActivity(data.activity || [])
       })
+
+    fetch('/api/gh/prs')
+      .then((res) => res.json())
+      .then((data) => setPrs(data || []))
+      .catch(() => setPrs([]))
   }, [authorized])
 
   useEffect(() => {
@@ -304,6 +313,22 @@ function App() {
     setRepoName('')
   }
 
+  const createProduct = async () => {
+    if (!productName.trim()) return
+    const templates: Record<string, string> = {
+      B2B: `Build a B2B SaaS MVP. Deliver a minimal landing page, auth, billing stub, and core dashboard. Keep scope small.`,
+      B2C: `Build a B2C product MVP. Focus on onboarding flow, core loop, and shareable output.`,
+      OSS: `Create an open-source starter with documentation, examples, and CI setup.`,
+    }
+    const prompt = templates[productTemplate] || templates.B2B
+    await fetch('/api/actions/product-factory', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: productName, prompt, role: productRole }),
+    })
+    setProductName('')
+  }
+
   const login = () => {
     window.location.href = '/api/auth/github/login'
   }
@@ -451,26 +476,30 @@ function App() {
 
         <div className="panel">
           <div className="panel__header">
-            <h2>Signals</h2>
-            <span>Auto-scout intel</span>
+            <h2>PR & CI Watch</h2>
+            <span>Open PRs</span>
           </div>
-          <ul className="signals">
-            {activity.slice(0, 4).map((signal) => (
-              <li key={signal.id}>{signal.text}</li>
+          <div className="pr-list">
+            {prs.length === 0 && <p className="empty">No open PRs</p>}
+            {prs.map((pr) => (
+              <div key={pr.number} className="pr-item">
+                <strong>#{pr.number} {pr.title}</strong>
+                <span>{pr.author?.login} • {pr.headRefName}</span>
+              </div>
             ))}
-          </ul>
+          </div>
           <div className="summary">
             <div>
               <h3>Swarm Health</h3>
-              <p>{bestAgent ? bestAgent.energy : 92}%</p>
+              <p>{agents.length ? Math.round(agents.reduce((acc, agent) => acc + agent.energy, 0) / agents.length) : 0}%</p>
             </div>
             <div>
               <h3>Open PRs</h3>
-              <p>{missions.length}</p>
+              <p>{prs.length}</p>
             </div>
             <div>
               <h3>CI Velocity</h3>
-              <p>1.3x</p>
+              <p>{prs.length ? `${Math.max(1, Math.round((prs.length + agents.length) / 3))}x` : '—'}</p>
             </div>
           </div>
         </div>
@@ -588,6 +617,31 @@ function App() {
               />
             </label>
             <button className="primary" onClick={createRepo}>Create public repo</button>
+          </div>
+          <div className="repo-form">
+            <label>
+              Product factory
+              <input
+                value={productName}
+                onChange={(event) => setProductName(event.target.value)}
+                placeholder="billing-paladin"
+              />
+            </label>
+            <div className="mission-form__row">
+              <label>
+                Template
+                <select value={productTemplate} onChange={(event) => setProductTemplate(event.target.value)}>
+                  <option>B2B</option>
+                  <option>B2C</option>
+                  <option>OSS</option>
+                </select>
+              </label>
+              <label>
+                Role
+                <input value={productRole} onChange={(event) => setProductRole(event.target.value)} />
+              </label>
+            </div>
+            <button className="primary" onClick={createProduct}>Create product + spawn</button>
           </div>
         </div>
 

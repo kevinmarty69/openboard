@@ -394,6 +394,31 @@
   color: var(--soft);
 }
 
+.pr-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.pr-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(10, 14, 18, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pr-item span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--soft);
+  margin-top: 4px;
+}
+
+.empty {
+  font-size: 0.8rem;
+  color: var(--soft);
+}
+
 .card__actions .danger {
   border-color: rgba(255, 122, 144, 0.5);
   color: #ff7a90;

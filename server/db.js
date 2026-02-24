@@ -82,6 +82,7 @@ addColumnIfMissing('agents', 'repo', 'text')
 addColumnIfMissing('missions', 'assignees', 'text')
 
 function seedIfEmpty() {
+  if (process.env.SEED_DATA === 'false') return
   const count = db.prepare('select count(*) as count from agents').get().count
   if (count > 0) return
 

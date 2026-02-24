@@ -7,6 +7,7 @@ import { WebSocketServer } from 'ws'
 import db from './db.js'
 import { runShell } from './actions.js'
 import { spawnMissionWorktree, createRepo } from './orchestrator.js'
+import { listPRs, prChecks, autoMerge } from './gh.js'
 
 dotenv.config()
 
@@ -454,6 +455,35 @@ app.post('/api/actions/create-repo', requireAuth, async (req, res) => {
   const repo = await createRepo({ name })
   logActivity(`📦 Created new repo: ${repo.repo}`)
   res.json(repo)
+})
+
+app.post('/api/actions/product-factory', requireAuth, async (req, res) => {
+  const { name, prompt, role } = req.body
+  if (!name || !prompt || !role) return res.status(400).json({ error: 'Missing name, prompt, role' })
+  const repo = await createRepo({ name })
+  const spawn = await spawnMissionWorktree({
+    repoPath: repo.repoPath,
+    role,
+    prompt,
+  })
+  logActivity(`🏭 Product factory spawned ${name} (${role})`)
+  res.json({ repo, spawn })
+})
+
+app.get('/api/gh/prs', requireAuth, async (_req, res) => {
+  const prs = await listPRs('kevinmarty69/openboard')
+  res.json(prs)
+})
+
+app.get('/api/gh/prs/:number/checks', requireAuth, async (req, res) => {
+  const checks = await prChecks('kevinmarty69/openboard', req.params.number)
+  res.json(checks)
+})
+
+app.post('/api/gh/prs/:number/merge', requireAuth, async (req, res) => {
+  await autoMerge('kevinmarty69/openboard', req.params.number)
+  logActivity(`✅ Auto-merge armed for PR #${req.params.number}`)
+  res.json({ ok: true })
 })
 
 const server = http.createServer(app)

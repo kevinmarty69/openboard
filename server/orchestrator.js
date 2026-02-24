@@ -49,10 +49,11 @@ export async function spawnMissionWorktree({
   return { session, branch: safeBranch, worktree: safeWorktree }
 }
 
-export async function createRepo({ name }) {
+export async function createRepo({ name, baseDir = '/Users/kevinmarty/opendev' }) {
   const repo = name.toLowerCase().replace(/\s+/g, '-')
-  await runShell(`gh repo create ${repo} --public`)
-  return { repo }
+  await runShell(`gh repo create ${repo} --public --confirm`)
+  await runShell(`git clone git@github.com:kevinmarty69/${repo}.git ${baseDir}/${repo}`)
+  return { repo, repoPath: `${baseDir}/${repo}` }
 }
 
 function shellQuote(value) {

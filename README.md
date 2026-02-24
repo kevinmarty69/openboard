@@ -30,7 +30,8 @@ GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
 SESSION_SECRET=change_me
 FRONTEND_URL=http://localhost:5173
 ENABLE_SHELL_ACTIONS=false
-ALLOWED_COMMANDS=tmux,openclaw,gh
+ALLOWED_COMMANDS=tmux,openclaw,gh,git
+SEED_DATA=true
 PORT=3000
 ```
 
