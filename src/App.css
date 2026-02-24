@@ -43,7 +43,7 @@
 
 .nav__section {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .nav__section button {
@@ -169,9 +169,10 @@
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 20px;
-  padding: 18px;
+  padding: 16px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(20px);
+  min-height: 0;
 }
 
 .panel--wide {
@@ -188,7 +189,7 @@
 
 .panel__header h2 {
   color: #f5f1e2;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
 }
 
 .roster {
@@ -207,7 +208,13 @@
   gap: 12px;
   position: relative;
   overflow: hidden;
-  min-height: 360px;
+  min-height: 380px;
+}
+
+.card__grid {
+  display: grid;
+  gap: 14px;
+  flex: 1;
 }
 
 .roster__card::after {
@@ -376,6 +383,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: auto;
 }
 
 .mission-form {
@@ -410,7 +418,7 @@
 
 .mission-form__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
 }
 
@@ -468,7 +476,12 @@
 .pr-list {
   display: grid;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+.pr-item strong {
+  display: block;
+  font-size: 0.8rem;
 }
 
 .pr-item {
@@ -519,8 +532,8 @@
 }
 
 .mission__item {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(10, 14, 18, 0.6);
   display: grid;
@@ -556,7 +569,7 @@
 
 .summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
 }
 
