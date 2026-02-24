@@ -18,6 +18,7 @@ type Agent = {
   xp: number
   skills: Skill[]
   equipment: string[]
+  nickname?: string
 }
 
 type Mission = {
@@ -416,7 +417,7 @@ function App() {
                         )}
                       </div>
                       <div>
-                        <strong>{agent.name}</strong>
+                        <strong>{agent.name} {agent.nickname ? `“${agent.nickname}”` : ''}</strong>
                         <span>{agent.role} • {agent.id}</span>
                       </div>
                       <div className={`badge badge--${agent.status.toLowerCase()}`}>
@@ -554,7 +555,7 @@ function App() {
                       )}
                     </div>
                     <div>
-                      <strong>{agent.name}</strong>
+                      <strong>{agent.name} {agent.nickname ? `“${agent.nickname}”` : ''}</strong>
                       <span>{agent.role} • {agent.id}</span>
                     </div>
                     <div className={`badge badge--${agent.status.toLowerCase()}`}>

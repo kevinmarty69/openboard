@@ -32,6 +32,7 @@ db.exec(`
     driver text default 'local',
     tmux_session text,
     repo text,
+    nickname text,
     created_at text default (datetime('now'))
   );
 
@@ -79,6 +80,7 @@ function addColumnIfMissing(table, column, definition) {
 addColumnIfMissing('agents', 'driver', "text default 'local'")
 addColumnIfMissing('agents', 'tmux_session', 'text')
 addColumnIfMissing('agents', 'repo', 'text')
+addColumnIfMissing('agents', 'nickname', 'text')
 addColumnIfMissing('missions', 'assignees', 'text')
 
 const avatarMap = new Map([
@@ -91,14 +93,26 @@ avatarMap.forEach((path, name) => {
   db.prepare("update agents set avatar = ? where name = ? and avatar not like '/avatars/%'").run(path, name)
 })
 
+const nicknameMap = new Map([
+  ['Zoe', 'Seraphine'],
+  ['Codex', 'Branwyn'],
+  ['Claude', 'Elyra'],
+  ['Gemini', 'Nymera'],
+  ['Mox', 'Garrick'],
+])
+
+nicknameMap.forEach((nickname, name) => {
+  db.prepare('update agents set nickname = ? where name = ? and (nickname is null or nickname = "")').run(nickname, name)
+})
+
 function seedIfEmpty() {
   if (process.env.SEED_DATA === 'false') return
   const count = db.prepare('select count(*) as count from agents').get().count
   if (count > 0) return
 
   const insertAgent = db.prepare(`
-    insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo)
-    values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo)
+    insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo, nickname)
+    values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo, @nickname)
   `)
 
   const agents = [
@@ -124,6 +138,7 @@ function seedIfEmpty() {
       driver: 'openclaw',
       tmux_session: null,
       repo: 'openboard',
+      nickname: 'Seraphine',
     },
     {
       id: 'C-17',
@@ -147,6 +162,7 @@ function seedIfEmpty() {
       driver: 'tmux',
       tmux_session: 'codex-core',
       repo: 'openboard',
+      nickname: 'Branwyn',
     },
     {
       id: 'CL-08',
@@ -170,6 +186,7 @@ function seedIfEmpty() {
       driver: 'tmux',
       tmux_session: 'claude-ui',
       repo: 'openboard',
+      nickname: 'Elyra',
     },
     {
       id: 'G-05',
@@ -193,6 +210,7 @@ function seedIfEmpty() {
       driver: 'local',
       tmux_session: null,
       repo: 'openboard',
+      nickname: 'Nymera',
     },
     {
       id: 'MX-31',
@@ -216,6 +234,7 @@ function seedIfEmpty() {
       driver: 'tmux',
       tmux_session: 'qa-sentinel',
       repo: 'openboard',
+      nickname: 'Garrick',
     },
   ]
 

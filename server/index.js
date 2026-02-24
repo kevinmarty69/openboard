@@ -171,10 +171,11 @@ app.post('/api/agents', requireAuth, (req, res) => {
     driver: payload.driver || 'local',
     tmux_session: payload.tmux_session || null,
     repo: payload.repo || null,
+    nickname: payload.nickname || null,
   }
   db.prepare(
-    `insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo)
-     values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo)`
+    `insert into agents (id, name, role, avatar, status, level, energy, morale, focus, location, current, xp, skills, equipment, driver, tmux_session, repo, nickname)
+     values (@id, @name, @role, @avatar, @status, @level, @energy, @morale, @focus, @location, @current, @xp, @skills, @equipment, @driver, @tmux_session, @repo, @nickname)`
   ).run(agent)
   logActivity(`🧩 Recruited ${agent.name} (${agent.role})`)
   broadcast('agent.created', { ...agent, skills: JSON.parse(agent.skills), equipment: JSON.parse(agent.equipment) })
@@ -195,7 +196,7 @@ app.put('/api/agents/:id', requireAuth, (req, res) => {
   db.prepare(
     `update agents set name=@name, role=@role, avatar=@avatar, status=@status, level=@level,
      energy=@energy, morale=@morale, focus=@focus, location=@location, current=@current, xp=@xp,
-     skills=@skills, equipment=@equipment, driver=@driver, tmux_session=@tmux_session, repo=@repo where id=@id`
+     skills=@skills, equipment=@equipment, driver=@driver, tmux_session=@tmux_session, repo=@repo, nickname=@nickname where id=@id`
   ).run(updated)
   logActivity(`⚔️ Updated ${updated.name} (${updated.status})`)
   broadcast('agent.updated', { ...updated, skills: JSON.parse(updated.skills), equipment: JSON.parse(updated.equipment) })
